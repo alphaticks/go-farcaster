@@ -1,4 +1,4 @@
-package go_farcaster
+package farcaster
 
 import (
 	"crypto/ecdsa"

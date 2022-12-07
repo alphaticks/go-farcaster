@@ -1,4 +1,4 @@
-package go_farcaster
+package farcaster
 
 import (
 	"crypto/ecdsa"
@@ -33,6 +33,9 @@ func NewClient(privateKey *ecdsa.PrivateKey, token string) (*Client, error) {
 }
 
 func (c *Client) Auth() error {
+	if c.pk == nil {
+		return errors.New("no private key provided, cannot authenticate")
+	}
 	req, err := api.Auth(c.pk, nil)
 	if err != nil {
 		return err
