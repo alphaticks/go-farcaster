@@ -1,87 +1,267 @@
 package api
 
-type V1Response struct {
-	Result interface{} `json:"result"`
-	Error  string      `json:"error"`
+type Error struct {
+	Message string `json:"message"`
 }
 
-type GetUsersResponse struct {
+type Cursor struct {
+	Cursor string `json:"cursor"`
+}
+
+type AuthRequest struct {
+	Method string `json:"method"`
+	Params struct {
+		ExpireAt  int64 `json:"expiresAt,omitempty"`
+		Timestamp int64 `json:"timestamp"`
+	} `json:"params"`
+}
+
+type AuthResponse struct {
+	Result struct {
+		Token struct {
+			Secret    string `json:"secret"`
+			ExpiresAt int64  `json:"expiresAt"`
+		} `json:"token"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+}
+
+type SuccessResponse struct {
+	Result struct {
+		Reaction Reaction `json:"like"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+}
+
+type LikeCastRequest struct {
+	Type     string `json:"type"`
+	CastFid  int    `json:"castFid"`
+	CastHash string `json:"castHash"`
+}
+
+type DeleteCastRequest struct {
+	Type     string `json:"type"`
+	CastFid  int    `json:"castFid"`
+	CastHash string `json:"castHash"`
+}
+
+type DeleteCastResponse struct {
+	Result struct {
+		Success bool `json:"success"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+}
+
+type PostCastRequest struct {
+	Text string `json:"text"`
+}
+
+type PostCastResponse struct {
+	Result struct {
+		Cast Cast `json:"cast"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+}
+
+type RecastRequest struct {
+	CastHash string `json:"castHash"`
+}
+
+type RecastResponse struct {
+	Result struct {
+		CastHash string `json:"castHash"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+}
+
+type FollowRequest struct {
+	TargetFid int `json:"targetFid"`
+}
+
+type GetFollowersResponse struct {
+	Result struct {
+		Users []User `json:"users"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+	Next   Cursor  `json:"next"`
+}
+
+type GetFollowingResponse struct {
+	Result struct {
+		Users []User `json:"users"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+	Next   Cursor  `json:"next"`
+}
+
+type GetUserResponse struct {
+	Result struct {
+		User User `json:"user"`
+	}
+	Errors []Error `json:"errors"`
+}
+
+type GetUserCollectionsResponse struct {
+	Result struct {
+		Collections []Collection `json:"collections"`
+	}
+	Errors []Error `json:"errors"`
+	Next   Cursor  `json:"next"`
+}
+
+type GetVerificationsResponse struct {
+	Result struct {
+		Verifications []Verification `json:"verifications"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+}
+
+type GetNotificationsResponse struct {
+	Result struct {
+		Notifications []Notification `json:"notifications"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+	Next   Cursor  `json:"next"`
 }
 
 type GetCastsResponse struct {
 	Result struct {
 		Casts []Cast `json:"casts"`
 	} `json:"result"`
+	Errors []Error `json:"errors"`
+	Next   Cursor  `json:"next"`
 }
 
-type GetProfileResponse struct {
+type GetRecastersResponse struct {
 	Result struct {
-		Profile Profile `json:"user"`
+		Users []User `json:"users"`
 	} `json:"result"`
+	Errors []Error `json:"errors"`
+	Next   Cursor  `json:"next"`
 }
 
-type Profile struct {
-	Address     string `json:"address"`
+type GetCastReactionsResponse struct {
+	Result struct {
+		Reactions []Reaction `json:"reactions"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+	Next   Cursor  `json:"next"`
+}
+
+type User struct {
+	Fid         int    `json:"fid"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
-	Avatar      struct {
-		Url        string `json:"url"`
-		IsVerified bool   `json:"isVerified"`
-	} `json:"avatar"`
-	FollowerCount     int  `json:"followerCount"`
-	FollowingCount    int  `json:"followingCount"`
-	IsViewerFollowing bool `json:"isViewerFollowing"`
-	IsFollowingViewer bool `json:"isFollowingViewer"`
-	Profile           struct {
+	Pfp         struct {
+		Url      string `json:"url"`
+		Verified bool   `json:"verified"`
+	} `json:"pfp"`
+	Profile struct {
 		Bio struct {
 			Text     string        `json:"text"`
 			Mentions []interface{} `json:"mentions"`
 		} `json:"bio"`
-		DirectMessageTargets struct {
-			Telegram string `json:"telegram"`
-		} `json:"directMessageTargets"`
 	} `json:"profile"`
-	ViewerCanSendDirectCasts bool `json:"viewerCanSendDirectCasts"`
+	FollowerCount  int `json:"followerCount"`
+	FollowingCount int `json:"followingCount"`
+	ViewerContext  struct {
+		Following  bool `json:"following"`
+		FollowedBy bool `json:"followedBy"`
+	} `json:"viewerContext"`
+}
+
+type Reaction struct {
+	Type    string `json:"type"`
+	Hash    string `json:"hash"`
+	Reactor struct {
+		Fid         int    `json:"fid"`
+		Username    string `json:"username"`
+		DisplayName string `json:"displayName"`
+		Pfp         struct {
+			Url      string `json:"url"`
+			Verified bool   `json:"verified"`
+		} `json:"pfp"`
+		FollowerCount    int    `json:"followerCount"`
+		FollowingCount   int    `json:"followingCount"`
+		ReferrerUsername string `json:"referrerUsername"`
+		ViewerContext    struct {
+			Following  bool `json:"following"`
+			FollowedBy bool `json:"followedBy"`
+		} `json:"viewerContext"`
+	} `json:"reactor"`
+	Timestamp int64  `json:"timestamp"`
+	CastHash  string `json:"castHash"`
 }
 
 type Cast struct {
-	Body struct {
-		Type        string `json:"type"`
-		PublishedAt int64  `json:"publishedAt"`
-		Sequence    int    `json:"sequence"`
-		Address     string `json:"address"`
+	Hash       string `json:"hash"`
+	ThreadHash string `json:"threadHash"`
+	Author     struct {
+		Fid         int    `json:"fid"`
 		Username    string `json:"username"`
-		Data        struct {
-			Text                  string      `json:"text"`
-			ReplyParentMerkleRoot interface{} `json:"replyParentMerkleRoot"`
-		} `json:"data"`
-		PrevMerkleRoot string `json:"prevMerkleRoot"`
-	} `json:"body"`
-	Attachments struct {
-		OpenGraph []interface{} `json:"openGraph"`
-	} `json:"attachments"`
-	Signature        string `json:"signature"`
-	MerkleRoot       string `json:"merkleRoot"`
-	ThreadMerkleRoot string `json:"threadMerkleRoot"`
-	Meta             struct {
-		DisplayName      string      `json:"displayName"`
-		Avatar           string      `json:"avatar"`
-		IsVerifiedAvatar bool        `json:"isVerifiedAvatar"`
-		Mentions         interface{} `json:"mentions"`
-		NumReplyChildren int         `json:"numReplyChildren"`
-		Reactions        struct {
-			Count int    `json:"count"`
-			Type  string `json:"type"`
-			Self  bool   `json:"self"`
-		} `json:"reactions"`
-		Recasters []interface{} `json:"recasters"`
-		Recasts   struct {
-			Count int  `json:"count"`
-			Self  bool `json:"self"`
-		} `json:"recasts"`
-		Watches struct {
-			Count int  `json:"count"`
-			Self  bool `json:"self"`
-		} `json:"watches"`
-	} `json:"meta"`
+		DisplayName string `json:"displayName"`
+		Pfp         struct {
+			Url      string `json:"url"`
+			Verified bool   `json:"verified"`
+		} `json:"pfp"`
+		FollowerCount  int `json:"followerCount"`
+		FollowingCount int `json:"followingCount"`
+	} `json:"author"`
+	Text        string `json:"text"`
+	PublishedAt int64  `json:"publishedAt"`
+	Replies     struct {
+		Count int `json:"count"`
+	} `json:"replies"`
+	Reactions struct {
+		Count int `json:"count"`
+	} `json:"reactions"`
+	Recasts struct {
+		Count     int `json:"count"`
+		Recasters []struct {
+			Fid         int    `json:"fid"`
+			Username    string `json:"username"`
+			DisplayName string `json:"displayName"`
+			RecastHash  string `json:"recastHash"`
+		} `json:"recasters"`
+	} `json:"recasts"`
+	Watches struct {
+		Count int `json:"count"`
+	} `json:"watches"`
+	Recast        bool `json:"recast"`
+	ViewerContext struct {
+		Reacted bool `json:"reacted"`
+		Recast  bool `json:"recast"`
+		Watched bool `json:"watched"`
+	} `json:"viewerContext"`
+}
+
+type Verification struct {
+	Fid       int    `json:"fid"`
+	Address   string `json:"address"`
+	Timestamp int64  `json:"timestamp"`
+}
+
+type Notification struct {
+	Type      string `json:"type"`
+	Id        string `json:"id"`
+	Timestamp int64  `json:"timestamp"`
+	Actor     User   `json:"actor"`
+	Content   struct {
+		Cast Cast `json:"cast"`
+	} `json:"content"`
+}
+
+type Collection struct {
+	Id                  string `json:"id"`
+	Name                string `json:"name"`
+	Description         string `json:"description"`
+	ItemCount           int    `json:"itemCount"`
+	OwnerCount          int    `json:"ownerCount"`
+	FarcasterOwnerCount int    `json:"farcasterOwnerCount"`
+	ImageUrl            string `json:"imageUrl"`
+	VolumeTraded        string `json:"volumeTraded"`
+	ExternalUrl         string `json:"externalUrl"`
+	OpenSeaUrl          string `json:"openSeaUrl"`
+	TwitterUsername     string `json:"twitterUsername"`
+	SchemaName          string `json:"schemaName"`
 }
