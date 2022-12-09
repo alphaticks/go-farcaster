@@ -106,7 +106,7 @@ func TestGetRecasters(t *testing.T) {
 }
 
 func TestGetFollowers(t *testing.T) {
-	req, err := GetFollowers(token, 1, nil)
+	req, err := GetFollowers(token, 1, nil, nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -115,7 +115,9 @@ func TestGetFollowers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error performing request: %v", err)
 	}
-	fmt.Println(res)
+	if len(res.Errors) > 0 {
+		t.Fatalf("error response: %v", res.Errors)
+	}
 }
 
 func TestGetFollowing(t *testing.T) {

@@ -57,25 +57,84 @@ func (c *Client) Authed() bool {
 	return c.token.Secret != "" && time.Now().Before(c.token.ExpiresAt)
 }
 
-func (c *Client) GetCasts(fid int) ([]api.Cast, error) {
+func (c *Client) GetCasts(fid int, limit *int, cursor *string) ([]api.Cast, string, error) {
+	if !c.Authed() {
+		if err := c.Auth(); err != nil {
+			return nil, "", fmt.Errorf("error authenticating: %w", err)
+		}
+	}
+	req, err := api.GetCasts(c.token.Secret, fid, limit, cursor)
+	if err != nil {
+		return nil, "", fmt.Errorf("error creating get casts request: %w", err)
+	}
+	res := api.GetCastsResponse{}
+	err = utils.PerformJSONRequest(c.Client, req, &res)
+	if err != nil {
+		return nil, "", fmt.Errorf("error performing follow request: %w", err)
+	}
+	if len(res.Errors) > 0 {
+		return nil, "", errors.New(res.Errors[0].Message)
+	}
+	fmt.Println("CURSOR", res.Next.Cursor)
+	return res.Result.Casts, res.Next.Cursor, nil
+}
+
+func (c *Client) GetCastsIterator(fid int) *CastsIterator {
+	return &CastsIterator{
+		fid: fid,
+		c:   c,
+	}
+}
+
+func (c *Client) GetUser(fid int) (*api.User, error) {
 	if !c.Authed() {
 		if err := c.Auth(); err != nil {
 			return nil, fmt.Errorf("error authenticating: %w", err)
 		}
 	}
-	req, err := api.GetCasts(c.token.Secret, fid, nil, nil)
+	req, err := api.GetUser(c.token.Secret, fid)
 	if err != nil {
-		return nil, fmt.Errorf("error creating get casts request: %w", err)
+		return nil, fmt.Errorf("error creating get user request: %w", err)
 	}
-	res := api.GetCastsResponse{}
+	res := api.GetUserResponse{}
 	err = utils.PerformJSONRequest(c.Client, req, &res)
 	if err != nil {
-		return nil, fmt.Errorf("error performing follow request: %w", err)
+		return nil, fmt.Errorf("error performing get user request: %w", err)
 	}
 	if len(res.Errors) > 0 {
 		return nil, errors.New(res.Errors[0].Message)
 	}
-	return res.Result.Casts, nil
+	return &res.Result.User, nil
+}
+
+func (c *Client) GetFollowers(fid int, limit *int, cursor *string) ([]api.User, string, error) {
+	if !c.Authed() {
+		if err := c.Auth(); err != nil {
+			return nil, "", fmt.Errorf("error authenticating: %w", err)
+		}
+	}
+	req, err := api.GetFollowers(c.token.Secret, fid, limit, cursor)
+	if err != nil {
+		return nil, "", fmt.Errorf("error creating get user request: %w", err)
+	}
+	res := api.GetFollowersResponse{}
+	err = utils.PerformJSONRequest(c.Client, req, &res)
+	if err != nil {
+		return nil, "", fmt.Errorf("error performing get user request: %w", err)
+	}
+	if len(res.Errors) > 0 {
+		return nil, "", errors.New(res.Errors[0].Message)
+	}
+	return res.Result.Users, res.Next.Cursor, nil
+}
+
+func (c *Client) GetFollowersIterator(fid int) *UsersIterator {
+	return &UsersIterator{
+		fid: fid,
+		fetcher: func(limit *int, cursor *string) ([]api.User, string, error) {
+			return c.GetFollowers(fid, limit, cursor)
+		},
+	}
 }
 
 func (c *Client) Cast(text string) error {
@@ -99,7 +158,7 @@ func (c *Client) Cast(text string) error {
 	return nil
 }
 
-func (c *Client) Follow(fid int) error {
+func (c *Client) Follow(fid uint) error {
 	if !c.Authed() {
 		if err := c.Auth(); err != nil {
 			return fmt.Errorf("error authenticating: %w", err)

@@ -1,5 +1,11 @@
 package api
 
+import "strings"
+
+func IsUnableToFindErr(err error) bool {
+	return strings.Contains(err.Error(), "Unable to find")
+}
+
 type Error struct {
 	Message string `json:"message"`
 }
@@ -35,13 +41,13 @@ type SuccessResponse struct {
 
 type LikeCastRequest struct {
 	Type     string `json:"type"`
-	CastFid  int    `json:"castFid"`
+	CastFid  uint   `json:"castFid"`
 	CastHash string `json:"castHash"`
 }
 
 type DeleteCastRequest struct {
 	Type     string `json:"type"`
-	CastFid  int    `json:"castFid"`
+	CastFid  uint   `json:"castFid"`
 	CastHash string `json:"castHash"`
 }
 
@@ -75,7 +81,7 @@ type RecastResponse struct {
 }
 
 type FollowRequest struct {
-	TargetFid int `json:"targetFid"`
+	TargetFid uint `json:"targetFid"`
 }
 
 type GetFollowersResponse struct {
@@ -149,7 +155,7 @@ type GetCastReactionsResponse struct {
 }
 
 type User struct {
-	Fid         int    `json:"fid"`
+	Fid         uint   `json:"fid"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
 	Pfp         struct {
@@ -162,8 +168,8 @@ type User struct {
 			Mentions []interface{} `json:"mentions"`
 		} `json:"bio"`
 	} `json:"profile"`
-	FollowerCount  int `json:"followerCount"`
-	FollowingCount int `json:"followingCount"`
+	FollowerCount  uint `json:"followerCount"`
+	FollowingCount uint `json:"followingCount"`
 	ViewerContext  struct {
 		Following  bool `json:"following"`
 		FollowedBy bool `json:"followedBy"`
@@ -174,15 +180,15 @@ type Reaction struct {
 	Type    string `json:"type"`
 	Hash    string `json:"hash"`
 	Reactor struct {
-		Fid         int    `json:"fid"`
+		Fid         uint   `json:"fid"`
 		Username    string `json:"username"`
 		DisplayName string `json:"displayName"`
 		Pfp         struct {
 			Url      string `json:"url"`
 			Verified bool   `json:"verified"`
 		} `json:"pfp"`
-		FollowerCount    int    `json:"followerCount"`
-		FollowingCount   int    `json:"followingCount"`
+		FollowerCount    uint   `json:"followerCount"`
+		FollowingCount   uint   `json:"followingCount"`
 		ReferrerUsername string `json:"referrerUsername"`
 		ViewerContext    struct {
 			Following  bool `json:"following"`
@@ -197,35 +203,35 @@ type Cast struct {
 	Hash       string `json:"hash"`
 	ThreadHash string `json:"threadHash"`
 	Author     struct {
-		Fid         int    `json:"fid"`
+		Fid         uint   `json:"fid"`
 		Username    string `json:"username"`
 		DisplayName string `json:"displayName"`
 		Pfp         struct {
 			Url      string `json:"url"`
 			Verified bool   `json:"verified"`
 		} `json:"pfp"`
-		FollowerCount  int `json:"followerCount"`
-		FollowingCount int `json:"followingCount"`
+		FollowerCount  uint `json:"followerCount"`
+		FollowingCount uint `json:"followingCount"`
 	} `json:"author"`
-	Text        string `json:"text"`
-	PublishedAt int64  `json:"publishedAt"`
-	Replies     struct {
-		Count int `json:"count"`
+	Text      string `json:"text"`
+	Timestamp int64  `json:"timestamp"`
+	Replies   struct {
+		Count uint `json:"count"`
 	} `json:"replies"`
 	Reactions struct {
-		Count int `json:"count"`
+		Count uint `json:"count"`
 	} `json:"reactions"`
 	Recasts struct {
-		Count     int `json:"count"`
+		Count     uint `json:"count"`
 		Recasters []struct {
-			Fid         int    `json:"fid"`
+			Fid         uint   `json:"fid"`
 			Username    string `json:"username"`
 			DisplayName string `json:"displayName"`
 			RecastHash  string `json:"recastHash"`
 		} `json:"recasters"`
 	} `json:"recasts"`
 	Watches struct {
-		Count int `json:"count"`
+		Count uint `json:"count"`
 	} `json:"watches"`
 	Recast        bool `json:"recast"`
 	ViewerContext struct {
@@ -236,7 +242,7 @@ type Cast struct {
 }
 
 type Verification struct {
-	Fid       int    `json:"fid"`
+	Fid       uint   `json:"fid"`
 	Address   string `json:"address"`
 	Timestamp int64  `json:"timestamp"`
 }
@@ -255,9 +261,9 @@ type Collection struct {
 	Id                  string `json:"id"`
 	Name                string `json:"name"`
 	Description         string `json:"description"`
-	ItemCount           int    `json:"itemCount"`
-	OwnerCount          int    `json:"ownerCount"`
-	FarcasterOwnerCount int    `json:"farcasterOwnerCount"`
+	ItemCount           uint   `json:"itemCount"`
+	OwnerCount          uint   `json:"ownerCount"`
+	FarcasterOwnerCount uint   `json:"farcasterOwnerCount"`
 	ImageUrl            string `json:"imageUrl"`
 	VolumeTraded        string `json:"volumeTraded"`
 	ExternalUrl         string `json:"externalUrl"`

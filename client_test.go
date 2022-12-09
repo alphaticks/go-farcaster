@@ -40,9 +40,14 @@ func TestClient(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	casts, err := c.GetCasts(2)
+	u, err := c.GetUser(8000)
+	fmt.Println(u, err)
+	casts, _, err := c.GetCasts(2, nil, nil)
 	if err != nil {
 		t.Fatal(err)
+	}
+	for _, c := range casts {
+		fmt.Println(c.Hash)
 	}
 	fmt.Println(casts)
 

@@ -123,13 +123,16 @@ func GetCastReactions(token string, fid int, hash string) (*http.Request, error)
 	return request, err
 }
 
-func GetFollowers(token string, fid int, limit *int) (*http.Request, error) {
+func GetFollowers(token string, fid int, limit *int, cursor *string) (*http.Request, error) {
 	path := APIURL + followersV2EP
 	params := map[string]interface{}{
 		"fid": fid,
 	}
 	if limit != nil {
 		params["limit"] = *limit
+	}
+	if cursor != nil {
+		params["cursor"] = *cursor
 	}
 	request, err := getAuthAPIRequest(token, http.MethodGet, path, params, nil)
 
@@ -206,7 +209,7 @@ func GetUserCollections(token string, ownerFid int, limit *int, cursor *string) 
 	return request, err
 }
 
-func LikeCast(token string, fid int, cast string) (*http.Request, error) {
+func LikeCast(token string, fid uint, cast string) (*http.Request, error) {
 	path := APIURL + castLikesV2EP
 
 	payload := LikeCastRequest{
@@ -219,7 +222,7 @@ func LikeCast(token string, fid int, cast string) (*http.Request, error) {
 	return request, err
 }
 
-func UnlikeCast(token string, fid int, cast string) (*http.Request, error) {
+func UnlikeCast(token string, fid uint, cast string) (*http.Request, error) {
 	path := APIURL + castLikesV2EP
 
 	payload := LikeCastRequest{
@@ -241,7 +244,7 @@ func PostCast(token string, cast string) (*http.Request, error) {
 	return request, err
 }
 
-func DeleteCast(token string, fid int, cast string) (*http.Request, error) {
+func DeleteCast(token string, fid uint, cast string) (*http.Request, error) {
 	path := APIURL + castsV2EP
 
 	payload := DeleteCastRequest{
@@ -271,7 +274,7 @@ func DeleteRecast(token string, cast string) (*http.Request, error) {
 	return request, err
 }
 
-func Follow(token string, fid int) (*http.Request, error) {
+func Follow(token string, fid uint) (*http.Request, error) {
 	path := APIURL + followsV2EP
 
 	payload := FollowRequest{TargetFid: fid}
@@ -280,7 +283,7 @@ func Follow(token string, fid int) (*http.Request, error) {
 	return request, err
 }
 
-func Unfollow(token string, fid int) (*http.Request, error) {
+func Unfollow(token string, fid uint) (*http.Request, error) {
 	path := APIURL + followsV2EP
 
 	payload := FollowRequest{TargetFid: fid}
