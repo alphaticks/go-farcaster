@@ -1,16 +1,14 @@
 package farcaster
 
 import (
-	"fmt"
 	"github.com/alphaticks/go-farcaster/api"
 	"io"
 )
 
 type CastsIterator struct {
-	fid    int
-	c      *Client
 	cursor string
 	err    error
+	fetch  func(*int, *string) ([]api.Cast, string, error)
 	Casts  []api.Cast
 }
 
@@ -19,8 +17,7 @@ func (i *CastsIterator) Next() bool {
 		return false
 	}
 	limit := 100
-	fmt.Println("NEXT", i.cursor)
-	i.Casts, i.cursor, i.err = i.c.GetCasts(i.fid, &limit, &i.cursor)
+	i.Casts, i.cursor, i.err = i.fetch(&limit, &i.cursor)
 	if i.err != nil {
 		return false
 	}
@@ -35,7 +32,6 @@ func (i *CastsIterator) Err() error {
 }
 
 type UsersIterator struct {
-	fid     int
 	cursor  string
 	err     error
 	fetcher func(*int, *string) ([]api.User, string, error)
@@ -58,5 +54,31 @@ func (i *UsersIterator) Next() bool {
 }
 
 func (i *UsersIterator) Err() error {
+	return i.err
+}
+
+type ReactionsIterator struct {
+	cursor    string
+	err       error
+	fetcher   func(*int, *string) ([]api.Reaction, string, error)
+	Reactions []api.Reaction
+}
+
+func (i *ReactionsIterator) Next() bool {
+	if i.err != nil {
+		return false
+	}
+	limit := 100
+	i.Reactions, i.cursor, i.err = i.fetcher(&limit, &i.cursor)
+	if i.err != nil {
+		return false
+	}
+	if i.cursor == "" {
+		i.err = io.EOF
+	}
+	return true
+}
+
+func (i *ReactionsIterator) Err() error {
 	return i.err
 }

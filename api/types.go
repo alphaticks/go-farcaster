@@ -107,6 +107,21 @@ type GetUserResponse struct {
 	Errors []Error `json:"errors"`
 }
 
+type GetUsersResponse struct {
+	Result struct {
+		Users []User `json:"users"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+	Next   Cursor  `json:"next"`
+}
+
+type GetCastResponse struct {
+	Result struct {
+		Cast Cast `json:"cast"`
+	}
+	Errors []Error `json:"errors"`
+}
+
 type GetUserCollectionsResponse struct {
 	Result struct {
 		Collections []Collection `json:"collections"`
@@ -146,9 +161,17 @@ type GetRecastersResponse struct {
 	Next   Cursor  `json:"next"`
 }
 
-type GetCastReactionsResponse struct {
+type GetReactionsResponse struct {
 	Result struct {
 		Reactions []Reaction `json:"reactions"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+	Next   Cursor  `json:"next"`
+}
+
+type GetLikesResponse struct {
+	Result struct {
+		Likes []Reaction `json:"likes"`
 	} `json:"result"`
 	Errors []Error `json:"errors"`
 	Next   Cursor  `json:"next"`
@@ -200,9 +223,27 @@ type Reaction struct {
 }
 
 type Cast struct {
-	Hash       string `json:"hash"`
-	ThreadHash string `json:"threadHash"`
-	Author     struct {
+	Hash         string `json:"hash"`
+	ThreadHash   string `json:"threadHash"`
+	ParentHash   string `json:"parentHash"`
+	ParentAuthor struct {
+		Fid         int    `json:"fid"`
+		Username    string `json:"username"`
+		DisplayName string `json:"displayName"`
+		Pfp         struct {
+			Url      string `json:"url"`
+			Verified bool   `json:"verified"`
+		} `json:"pfp"`
+		Profile struct {
+			Bio struct {
+				Text     string        `json:"text"`
+				Mentions []interface{} `json:"mentions"`
+			} `json:"bio"`
+		} `json:"profile"`
+		FollowerCount  uint `json:"followerCount"`
+		FollowingCount uint `json:"followingCount"`
+	} `json:"parentAuthor"`
+	Author struct {
 		Fid         uint   `json:"fid"`
 		Username    string `json:"username"`
 		DisplayName string `json:"displayName"`
@@ -210,6 +251,12 @@ type Cast struct {
 			Url      string `json:"url"`
 			Verified bool   `json:"verified"`
 		} `json:"pfp"`
+		Profile struct {
+			Bio struct {
+				Text     string        `json:"text"`
+				Mentions []interface{} `json:"mentions"`
+			} `json:"bio"`
+		} `json:"profile"`
 		FollowerCount  uint `json:"followerCount"`
 		FollowingCount uint `json:"followingCount"`
 	} `json:"author"`
@@ -222,18 +269,12 @@ type Cast struct {
 		Count uint `json:"count"`
 	} `json:"reactions"`
 	Recasts struct {
-		Count     uint `json:"count"`
-		Recasters []struct {
-			Fid         uint   `json:"fid"`
-			Username    string `json:"username"`
-			DisplayName string `json:"displayName"`
-			RecastHash  string `json:"recastHash"`
-		} `json:"recasters"`
+		Count     uint          `json:"count"`
+		Recasters []interface{} `json:"recasters"`
 	} `json:"recasts"`
 	Watches struct {
 		Count uint `json:"count"`
 	} `json:"watches"`
-	Recast        bool `json:"recast"`
 	ViewerContext struct {
 		Reacted bool `json:"reacted"`
 		Recast  bool `json:"recast"`

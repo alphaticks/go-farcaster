@@ -60,8 +60,39 @@ func TestAuth(t *testing.T) {
 	}
 }
 
+func TestGetCast(t *testing.T) {
+	req, err := GetCast(token, "0x261f4b1fb019be23a35486d01455dba9ba578dc35690c195c8e63a2d738993e9")
+	if err != nil {
+		t.Error(err)
+	}
+	var res GetCastResponse
+	err = utils.PerformJSONRequest(client, req, &res)
+	if err != nil {
+		t.Fatalf("error performing request: %v", err)
+	}
+	if len(res.Errors) > 0 {
+		t.Fatalf("error response: %v", res.Errors)
+	}
+	fmt.Println(fmt.Sprintf("%+v", res))
+}
+
 func TestGetCasts(t *testing.T) {
 	req, err := GetCasts(token, 4395, nil, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	var res GetCastsResponse
+	err = utils.PerformJSONRequest(client, req, &res)
+	if err != nil {
+		t.Fatalf("error performing request: %v", err)
+	}
+	if len(res.Errors) > 0 {
+		t.Fatalf("error response: %v", res.Errors)
+	}
+}
+
+func TestGetThreadCasts(t *testing.T) {
+	req, err := GetThreadCasts(token, "0x32da4fe56fee3f4ba4879462b2cf6af8d720dbf6fee322c8eff722865cc19b49")
 	if err != nil {
 		t.Error(err)
 	}
@@ -80,7 +111,22 @@ func TestGetCastReactions(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	var res GetCastReactionsResponse
+	var res GetReactionsResponse
+	err = utils.PerformJSONRequest(client, req, &res)
+	if err != nil {
+		t.Fatalf("error performing request: %v", err)
+	}
+	if len(res.Errors) > 0 {
+		t.Fatalf("error response: %v", res.Errors)
+	}
+}
+
+func TestGetUserCastLikes(t *testing.T) {
+	req, err := GetUserCastLikes(token, 4395, nil, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	var res GetLikesResponse
 	err = utils.PerformJSONRequest(client, req, &res)
 	if err != nil {
 		t.Fatalf("error performing request: %v", err)
@@ -150,6 +196,42 @@ func TestGetUser(t *testing.T) {
 		t.Fatalf("error response: %v", res.Errors)
 	}
 	fmt.Println(res)
+}
+
+func TestGetRecentUsers(t *testing.T) {
+	req, err := GetRecentUsers(token, nil, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	var res GetUsersResponse
+	err = utils.PerformJSONRequest(client, req, &res)
+	if err != nil {
+		t.Fatalf("error performing request: %v", err)
+	}
+	if len(res.Errors) > 0 {
+		t.Fatalf("error response: %v", res.Errors)
+	}
+	if len(res.Result.Users) == 0 {
+		t.Fatalf("was expecting at least one user")
+	}
+}
+
+func TestGetRecentCasts(t *testing.T) {
+	req, err := GetRecentCasts(token, nil, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	var res GetCastsResponse
+	err = utils.PerformJSONRequest(client, req, &res)
+	if err != nil {
+		t.Fatalf("error performing request: %v", err)
+	}
+	if len(res.Errors) > 0 {
+		t.Fatalf("error response: %v", res.Errors)
+	}
+	if len(res.Result.Casts) == 0 {
+		t.Fatalf("was expecting at least one cast")
+	}
 }
 
 func TestGetMe(t *testing.T) {

@@ -15,7 +15,10 @@ import (
 const (
 	APIURL = "https://api.farcaster.xyz"
 
+	castV2EP            = "/v2/cast"
 	castsV2EP           = "/v2/casts"
+	recentCastsV2EP     = "/v2/recent-casts"
+	threadCastsV2EP     = "/v2/all-casts-in-thread"
 	castLikesV2EP       = "/v2/cast-likes"
 	castRecastersV2EP   = "/v2/cast-recasters"
 	recastsV2EP         = "/v2/recasts"
@@ -25,6 +28,8 @@ const (
 	verificationsV2EP   = "/v2/verifications"
 	notificationsV2EP   = "/v2/mention-and-reply-notifications"
 	userV2EP            = "/v2/user"
+	userCastLikesV2EP   = "/v2/user-cast-likes"
+	recentUsersV2EP     = "/v2/recent-users"
 	userCollectionsV2EP = "/v2/user-collections"
 	meV2EP              = "/v2/me"
 )
@@ -75,6 +80,7 @@ func Auth(credentials *ecdsa.PrivateKey, expireAt *time.Time) (*http.Request, er
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(string(body))
 
 	sign, err := EIP191Sign(credentials, string(body))
 	ba := base64.StdEncoding.EncodeToString(sign)
@@ -95,6 +101,16 @@ func GetCasts(token string, fid int, limit *int, cursor *string) (*http.Request,
 	}
 	if cursor != nil {
 		params["cursor"] = *cursor
+	}
+	request, err := getAuthAPIRequest(token, http.MethodGet, path, params, nil)
+
+	return request, err
+}
+
+func GetThreadCasts(token string, threadHash string) (*http.Request, error) {
+	path := APIURL + threadCastsV2EP
+	params := map[string]interface{}{
+		"threadHash": threadHash,
 	}
 	request, err := getAuthAPIRequest(token, http.MethodGet, path, params, nil)
 
@@ -156,6 +172,60 @@ func GetUser(token string, fid int) (*http.Request, error) {
 	path := APIURL + userV2EP
 	params := map[string]interface{}{
 		"fid": fid,
+	}
+	request, err := getAuthAPIRequest(token, http.MethodGet, path, params, nil)
+
+	return request, err
+}
+
+func GetUserCastLikes(token string, fid int, limit *int, cursor *string) (*http.Request, error) {
+	path := APIURL + userCastLikesV2EP
+	params := map[string]interface{}{
+		"fid": fid,
+	}
+	if limit != nil {
+		params["limit"] = *limit
+	}
+	if cursor != nil {
+		params["cursor"] = *cursor
+	}
+	request, err := getAuthAPIRequest(token, http.MethodGet, path, params, nil)
+
+	return request, err
+}
+
+func GetRecentUsers(token string, limit *int, cursor *string) (*http.Request, error) {
+	path := APIURL + recentUsersV2EP
+	params := map[string]interface{}{}
+	if limit != nil {
+		params["limit"] = *limit
+	}
+	if cursor != nil {
+		params["cursor"] = *cursor
+	}
+	request, err := getAuthAPIRequest(token, http.MethodGet, path, params, nil)
+
+	return request, err
+}
+
+func GetCast(token, hash string) (*http.Request, error) {
+	path := APIURL + castV2EP
+	params := map[string]interface{}{
+		"hash": hash,
+	}
+	request, err := getAuthAPIRequest(token, http.MethodGet, path, params, nil)
+
+	return request, err
+}
+
+func GetRecentCasts(token string, limit *int, cursor *string) (*http.Request, error) {
+	path := APIURL + recentCastsV2EP
+	params := map[string]interface{}{}
+	if limit != nil {
+		params["limit"] = *limit
+	}
+	if cursor != nil {
+		params["cursor"] = *cursor
 	}
 	request, err := getAuthAPIRequest(token, http.MethodGet, path, params, nil)
 
