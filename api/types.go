@@ -17,22 +17,28 @@ type Cursor struct {
 type AuthRequest struct {
 	Method string `json:"method"`
 	Params struct {
-		ExpireAt  int64 `json:"expiresAt,omitempty"`
-		Timestamp int64 `json:"timestamp"`
+		ExpiresAt uint64 `json:"expiresAt,omitempty"`
+		Timestamp uint64 `json:"timestamp"`
 	} `json:"params"`
 }
 
 type AuthResponse struct {
 	Result struct {
-		Token struct {
-			Secret    string `json:"secret"`
-			ExpiresAt int64  `json:"expiresAt"`
-		} `json:"token"`
+		Token Token `json:"token"`
 	} `json:"result"`
 	Errors []Error `json:"errors"`
 }
 
+type Token struct {
+	Secret    string `json:"secret"`
+	ExpiresAt uint64 `json:"expiresAt"`
+}
+
 type SuccessResponse struct {
+	Errors []Error `json:"errors"`
+}
+
+type LikeCastResponse struct {
 	Result struct {
 		Reaction Reaction `json:"like"`
 	} `json:"result"`
@@ -59,7 +65,13 @@ type DeleteCastResponse struct {
 }
 
 type PostCastRequest struct {
-	Text string `json:"text"`
+	Text   string  `json:"text"`
+	Parent *Parent `json:"parent,omitempty"`
+}
+
+type Parent struct {
+	Hash string `json:"hash"`
+	Fid  uint   `json:"fid"`
 }
 
 type PostCastResponse struct {

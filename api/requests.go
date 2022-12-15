@@ -66,24 +66,41 @@ func getAuthAPIRequest(token string, method string, path string, params map[stri
 	return req, nil
 }
 
-func Auth(credentials *ecdsa.PrivateKey, expireAt *time.Time) (*http.Request, error) {
-	path := APIURL + "/v2/auth"
-
+func Auth(credentials *ecdsa.PrivateKey, expiresAt *time.Time) (*http.Request, error) {
 	req := AuthRequest{
 		Method: "generateToken",
 	}
-	req.Params.Timestamp = time.Now().UnixMilli()
-	if expireAt != nil {
-		req.Params.ExpireAt = expireAt.UnixMilli()
+	req.Params.Timestamp = 1671048630844 //uint64(time.Now().UnixMilli())
+	if expiresAt != nil {
+		req.Params.ExpiresAt = uint64(expiresAt.UnixMilli())
 	}
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(body))
 
 	sign, err := EIP191Sign(credentials, string(body))
-	ba := base64.StdEncoding.EncodeToString(sign)
+	fmt.Println("sign", string(body), sign)
+	return nil, nil
+	return GetBearerToken(req.Params.Timestamp, &req.Params.ExpiresAt, sign)
+}
+
+func GetBearerToken(timestamp uint64, expiresAt *uint64, signature []byte) (*http.Request, error) {
+	path := APIURL + "/v2/auth"
+
+	req := AuthRequest{
+		Method: "generateToken",
+	}
+	req.Params.Timestamp = timestamp
+	if expiresAt != nil {
+		req.Params.ExpiresAt = *expiresAt
+	}
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	ba := base64.StdEncoding.EncodeToString(signature)
 	request, err := http.NewRequest(http.MethodPut, path, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", fmt.Sprintf("Bearer eip191:%s", ba))
@@ -305,10 +322,16 @@ func UnlikeCast(token string, fid uint, cast string) (*http.Request, error) {
 	return request, err
 }
 
-func PostCast(token string, cast string) (*http.Request, error) {
+func PostCast(token string, cast string, parentHash *string, authorFid *uint) (*http.Request, error) {
 	path := APIURL + castsV2EP
 
 	payload := PostCastRequest{Text: cast}
+	if parentHash != nil {
+		payload.Parent = &Parent{
+			Hash: *parentHash,
+			Fid:  *authorFid,
+		}
+	}
 	request, err := getAuthAPIRequest(token, http.MethodPost, path, nil, payload)
 
 	return request, err

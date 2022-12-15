@@ -3,6 +3,7 @@ package api
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"github.com/alphaticks/go-farcaster/utils"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -297,7 +298,7 @@ func TestGetUserCollections(t *testing.T) {
 }
 
 func TestPostCast(t *testing.T) {
-	req, err := PostCast(token, "Test")
+	req, err := PostCast(token, "Test", nil, nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -352,22 +353,19 @@ func TestLikeCast(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	var res SuccessResponse
+	var res json.RawMessage
 	err = utils.PerformJSONRequest(client, req, &res)
 	if err != nil {
 		t.Fatalf("error performing request: %v", err)
 	}
-	if len(res.Errors) > 0 {
-		t.Fatalf("error response: %v", res.Errors)
-	}
+	fmt.Println(string(res))
+
 	req, err = UnlikeCast(token, 4395, "0xc7e3b6592b083c94564e111a2eff6909618b3192ff44265efb1de70c0df00732")
 	err = utils.PerformJSONRequest(client, req, &res)
 	if err != nil {
 		t.Fatalf("error performing request: %v", err)
 	}
-	if len(res.Errors) > 0 {
-		t.Fatalf("error response: %v", res.Errors)
-	}
+
 }
 
 func TestFollow(t *testing.T) {

@@ -49,12 +49,33 @@ func (c *Client) Auth() error {
 		return errors.New(res.Errors[0].Message)
 	}
 	c.token.Secret = res.Result.Token.Secret
-	c.token.ExpiresAt = time.UnixMilli(res.Result.Token.ExpiresAt)
+	c.token.ExpiresAt = time.UnixMilli(int64(res.Result.Token.ExpiresAt))
 	return nil
+}
+
+func (c *Client) SetBearerToken(secret string, expiresAt time.Time) {
+	c.token.Secret = secret
+	c.token.ExpiresAt = expiresAt
 }
 
 func (c *Client) Authed() bool {
 	return c.token.Secret != "" && time.Now().Before(c.token.ExpiresAt)
+}
+
+func (c *Client) GetBearerToken(timestamp uint64, signature []byte) (*api.Token, error) {
+	req, err := api.GetBearerToken(timestamp, nil, signature)
+	if err != nil {
+		return nil, fmt.Errorf("error creating bearer token request: %w", err)
+	}
+	res := api.AuthResponse{}
+	err = utils.PerformJSONRequest(c.Client, req, &res)
+	if err != nil {
+		return nil, fmt.Errorf("error performing bearer token request: %w", err)
+	}
+	if len(res.Errors) > 0 {
+		return nil, errors.New(res.Errors[0].Message)
+	}
+	return &res.Result.Token, nil
 }
 
 func (c *Client) GetCasts(fid int, limit *int, cursor *string) ([]api.Cast, string, error) {
@@ -98,6 +119,27 @@ func (c *Client) GetRecentCasts(limit *int, cursor *string) ([]api.Cast, string,
 		return nil, "", errors.New(res.Errors[0].Message)
 	}
 	return res.Result.Casts, res.Next.Cursor, nil
+}
+
+func (c *Client) GetMe() (*api.User, error) {
+	if !c.Authed() {
+		if err := c.Auth(); err != nil {
+			return nil, fmt.Errorf("error authenticating: %w", err)
+		}
+	}
+	req, err := api.GetMe(c.token.Secret)
+	if err != nil {
+		return nil, fmt.Errorf("error creating get user request: %w", err)
+	}
+	res := api.GetUserResponse{}
+	err = utils.PerformJSONRequest(c.Client, req, &res)
+	if err != nil {
+		return nil, fmt.Errorf("error performing get user request: %w", err)
+	}
+	if len(res.Errors) > 0 {
+		return nil, errors.New(res.Errors[0].Message)
+	}
+	return &res.Result.User, nil
 }
 
 func (c *Client) GetUser(fid int) (*api.User, error) {
@@ -163,27 +205,6 @@ func (c *Client) GetFollowers(fid int, limit *int, cursor *string) ([]api.User, 
 	return res.Result.Users, res.Next.Cursor, nil
 }
 
-func (c *Client) Cast(text string) error {
-	if !c.Authed() {
-		if err := c.Auth(); err != nil {
-			return fmt.Errorf("error authenticating: %w", err)
-		}
-	}
-	req, err := api.PostCast(c.token.Secret, text)
-	if err != nil {
-		return fmt.Errorf("error creating cast request: %w", err)
-	}
-	res := api.PostCastResponse{}
-	err = utils.PerformJSONRequest(c.Client, req, &res)
-	if err != nil {
-		return fmt.Errorf("error performing cast request: %w", err)
-	}
-	if len(res.Errors) > 0 {
-		return errors.New(res.Errors[0].Message)
-	}
-	return nil
-}
-
 func (c *Client) Follow(fid uint) error {
 	if !c.Authed() {
 		if err := c.Auth(); err != nil {
@@ -203,6 +224,48 @@ func (c *Client) Follow(fid uint) error {
 		return errors.New(res.Errors[0].Message)
 	}
 	return nil
+}
+
+func (c *Client) PostCast(text string, parentHash *string, authorFid *uint) (*api.Cast, error) {
+	if !c.Authed() {
+		if err := c.Auth(); err != nil {
+			return nil, fmt.Errorf("error authenticating: %w", err)
+		}
+	}
+	req, err := api.PostCast(c.token.Secret, text, parentHash, authorFid)
+	if err != nil {
+		return nil, fmt.Errorf("error creating follow request: %w", err)
+	}
+	res := api.PostCastResponse{}
+	err = utils.PerformJSONRequest(c.Client, req, &res)
+	if err != nil {
+		return nil, fmt.Errorf("error performing follow request: %w", err)
+	}
+	if len(res.Errors) > 0 {
+		return nil, errors.New(res.Errors[0].Message)
+	}
+	return &res.Result.Cast, nil
+}
+
+func (c *Client) LikeCast(author uint, hash string) (*api.Reaction, error) {
+	if !c.Authed() {
+		if err := c.Auth(); err != nil {
+			return nil, fmt.Errorf("error authenticating: %w", err)
+		}
+	}
+	req, err := api.LikeCast(c.token.Secret, author, hash)
+	if err != nil {
+		return nil, fmt.Errorf("error creating follow request: %w", err)
+	}
+	res := api.LikeCastResponse{}
+	err = utils.PerformJSONRequest(c.Client, req, &res)
+	if err != nil {
+		return nil, fmt.Errorf("error performing follow request: %w", err)
+	}
+	if len(res.Errors) > 0 {
+		return nil, errors.New(res.Errors[0].Message)
+	}
+	return &res.Result.Reaction, nil
 }
 
 func (c *Client) GetCastsIterator(fid int) *CastsIterator {
