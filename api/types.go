@@ -6,6 +6,10 @@ func IsUnableToFindErr(err error) bool {
 	return strings.Contains(err.Error(), "Unable to find")
 }
 
+func IsRateLimitExceededErr(err error) bool {
+	return strings.Contains(err.Error(), "Rate limit exceeded")
+}
+
 type Error struct {
 	Message string `json:"message"`
 }
