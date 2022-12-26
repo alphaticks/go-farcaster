@@ -12,7 +12,7 @@ import (
 
 type Token struct {
 	Secret    string
-	ExpiresAt time.Time
+	ExpiresAt *time.Time
 }
 
 type Client struct {
@@ -27,7 +27,7 @@ func NewClient(privateKey *ecdsa.PrivateKey, token string) (*Client, error) {
 		pk:     privateKey,
 		token: Token{
 			Secret:    token,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
+			ExpiresAt: nil,
 		},
 	}, nil
 }
@@ -49,17 +49,18 @@ func (c *Client) Auth() error {
 		return errors.New(res.Errors[0].Message)
 	}
 	c.token.Secret = res.Result.Token.Secret
-	c.token.ExpiresAt = time.UnixMilli(int64(res.Result.Token.ExpiresAt))
+	v := time.UnixMilli(int64(res.Result.Token.ExpiresAt))
+	c.token.ExpiresAt = &v
 	return nil
 }
 
 func (c *Client) SetBearerToken(secret string, expiresAt time.Time) {
 	c.token.Secret = secret
-	c.token.ExpiresAt = expiresAt
+	c.token.ExpiresAt = &expiresAt
 }
 
 func (c *Client) Authed() bool {
-	return c.token.Secret != "" && time.Now().Before(c.token.ExpiresAt)
+	return c.token.Secret != "" && (c.token.ExpiresAt == nil || time.Now().Before(*c.token.ExpiresAt))
 }
 
 func (c *Client) GetBearerToken(timestamp uint64, signature []byte) (*api.Token, error) {
