@@ -10,6 +10,10 @@ func IsRateLimitExceededErr(err error) bool {
 	return strings.Contains(err.Error(), "Rate limit exceeded")
 }
 
+func IsNoFIDRegisteredErr(err error) bool {
+	return strings.Contains(err.Error(), "No FID registered")
+}
+
 type Error struct {
 	Message string `json:"message"`
 }
