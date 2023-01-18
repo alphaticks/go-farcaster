@@ -206,6 +206,27 @@ func (c *Client) GetFollowers(fid int, limit *int, cursor *string) ([]api.User, 
 	return res.Result.Users, res.Next.Cursor, nil
 }
 
+func (c *Client) GetVerifications(fid int) ([]api.Verification, error) {
+	if !c.Authed() {
+		if err := c.Auth(); err != nil {
+			return nil, fmt.Errorf("error authenticating: %w", err)
+		}
+	}
+	req, err := api.GetVerifications(c.token.Secret, fid)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	res := api.GetVerificationsResponse{}
+	err = utils.PerformJSONRequest(c.Client, req, &res)
+	if err != nil {
+		return nil, fmt.Errorf("error performing request: %w", err)
+	}
+	if len(res.Errors) > 0 {
+		return nil, errors.New(res.Errors[0].Message)
+	}
+	return res.Result.Verifications, nil
+}
+
 func (c *Client) Follow(fid uint) error {
 	if !c.Authed() {
 		if err := c.Auth(); err != nil {
