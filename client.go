@@ -206,6 +206,7 @@ func (c *Client) GetFollowers(fid int, limit *int, cursor *string) ([]api.User, 
 	return res.Result.Users, res.Next.Cursor, nil
 }
 
+//GetVerifications
 func (c *Client) GetVerifications(fid int) ([]api.Verification, error) {
 	if !c.Authed() {
 		if err := c.Auth(); err != nil {
