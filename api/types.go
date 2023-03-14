@@ -2,7 +2,7 @@ package api
 
 import "strings"
 
-func NoAccountFoundErr(err error) bool {
+func IsNoAccountFoundErr(err error) bool {
 	return strings.Contains(err.Error(), "No account found")
 }
 
