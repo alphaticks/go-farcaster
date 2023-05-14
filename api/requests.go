@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	APIURL = "https://api.farcaster.xyz"
+	APIURL = "https://api.warpcast.com"
 
 	castV2EP            = "/v2/cast"
 	castsV2EP           = "/v2/casts"
