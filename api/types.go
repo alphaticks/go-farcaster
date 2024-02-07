@@ -169,6 +169,133 @@ type GetNotificationsResponse struct {
 	Next   Cursor  `json:"next"`
 }
 
+type Cast struct {
+	Hash         string `json:"hash"`
+	ThreadHash   string `json:"threadHash"`
+	ParentHash   string `json:"parentHash,omitempty"`
+	ParentAuthor struct {
+		Fid         int    `json:"fid"`
+		Username    string `json:"username"`
+		DisplayName string `json:"displayName"`
+		Pfp         struct {
+			Url      string `json:"url"`
+			Verified bool   `json:"verified"`
+		} `json:"pfp"`
+		Profile struct {
+			Bio struct {
+				Text            string   `json:"text"`
+				Mentions        []string `json:"mentions"`
+				ChannelMentions []string `json:"channelMentions,omitempty"`
+			} `json:"bio"`
+			Location struct {
+				PlaceId     string `json:"placeId"`
+				Description string `json:"description"`
+			} `json:"location"`
+		} `json:"profile"`
+		FollowerCount     int  `json:"followerCount"`
+		FollowingCount    int  `json:"followingCount"`
+		ActiveOnFcNetwork bool `json:"activeOnFcNetwork"`
+	} `json:"parentAuthor,omitempty"`
+	Author struct {
+		Fid         int    `json:"fid"`
+		Username    string `json:"username"`
+		DisplayName string `json:"displayName"`
+		Pfp         struct {
+			Url      string `json:"url"`
+			Verified bool   `json:"verified"`
+		} `json:"pfp"`
+		Profile struct {
+			Bio struct {
+				Text            string        `json:"text"`
+				Mentions        []interface{} `json:"mentions"`
+				ChannelMentions []interface{} `json:"channelMentions,omitempty"`
+			} `json:"bio"`
+			Location struct {
+				PlaceId     string `json:"placeId"`
+				Description string `json:"description"`
+			} `json:"location"`
+		} `json:"profile"`
+		FollowerCount     int  `json:"followerCount"`
+		FollowingCount    int  `json:"followingCount"`
+		ActiveOnFcNetwork bool `json:"activeOnFcNetwork"`
+		ViewerContext     struct {
+			Following bool `json:"following"`
+		} `json:"viewerContext"`
+	} `json:"author"`
+	Text      string `json:"text"`
+	Timestamp int64  `json:"timestamp"`
+	Replies   struct {
+		Count int `json:"count"`
+	} `json:"replies"`
+	Reactions struct {
+		Count int `json:"count"`
+	} `json:"reactions"`
+	Recasts struct {
+		Count     int `json:"count"`
+		Recasters []struct {
+			Fid         int    `json:"fid"`
+			Username    string `json:"username"`
+			DisplayName string `json:"displayName"`
+			RecastHash  string `json:"recastHash"`
+		} `json:"recasters"`
+	} `json:"recasts"`
+	Watches struct {
+		Count int `json:"count"`
+	} `json:"watches"`
+	Tags []struct {
+		Type     string `json:"type"`
+		Id       string `json:"id"`
+		Name     string `json:"name"`
+		ImageUrl string `json:"imageUrl"`
+	} `json:"tags"`
+	QuoteCount          int `json:"quoteCount"`
+	CombinedRecastCount int `json:"combinedRecastCount"`
+	ViewerContext       struct {
+		Reacted bool `json:"reacted"`
+		Recast  bool `json:"recast"`
+		Watched bool `json:"watched"`
+	} `json:"viewerContext"`
+	ViewCount int `json:"viewCount,omitempty"`
+	Embeds    struct {
+		Images []struct {
+			Type      string `json:"type"`
+			Url       string `json:"url"`
+			SourceUrl string `json:"sourceUrl"`
+			Alt       string `json:"alt"`
+		} `json:"images"`
+		Urls              []interface{} `json:"urls"`
+		Unknowns          []interface{} `json:"unknowns"`
+		ProcessedCastText string        `json:"processedCastText"`
+	} `json:"embeds,omitempty"`
+	Mentions []struct {
+		Fid         int    `json:"fid"`
+		Username    string `json:"username"`
+		DisplayName string `json:"displayName"`
+		Pfp         struct {
+			Url      string `json:"url"`
+			Verified bool   `json:"verified"`
+		} `json:"pfp"`
+		Profile struct {
+			Bio struct {
+				Text     string        `json:"text"`
+				Mentions []interface{} `json:"mentions"`
+			} `json:"bio"`
+			Location struct {
+				PlaceId     string `json:"placeId"`
+				Description string `json:"description"`
+			} `json:"location"`
+		} `json:"profile"`
+		FollowerCount     int  `json:"followerCount"`
+		FollowingCount    int  `json:"followingCount"`
+		ActiveOnFcNetwork bool `json:"activeOnFcNetwork"`
+	} `json:"mentions,omitempty"`
+	Recast       bool `json:"recast,omitempty"`
+	ParentSource struct {
+		Type string `json:"type"`
+		Url  string `json:"url"`
+	} `json:"parentSource,omitempty"`
+}
+
 type GetCastsResponse struct {
 	Result struct {
 		Casts []Cast `json:"casts"`
@@ -246,64 +373,18 @@ type Reaction struct {
 	CastHash  string `json:"castHash"`
 }
 
-type Cast struct {
-	Hash         string `json:"hash"`
-	ThreadHash   string `json:"threadHash"`
-	ParentHash   string `json:"parentHash"`
-	ParentAuthor struct {
-		Fid         int    `json:"fid"`
-		Username    string `json:"username"`
-		DisplayName string `json:"displayName"`
-		Pfp         struct {
-			Url      string `json:"url"`
-			Verified bool   `json:"verified"`
-		} `json:"pfp"`
-		Profile struct {
-			Bio struct {
-				Text     string        `json:"text"`
-				Mentions []interface{} `json:"mentions"`
-			} `json:"bio"`
-		} `json:"profile"`
-		FollowerCount  uint `json:"followerCount"`
-		FollowingCount uint `json:"followingCount"`
-	} `json:"parentAuthor"`
-	Author struct {
-		Fid         uint   `json:"fid"`
-		Username    string `json:"username"`
-		DisplayName string `json:"displayName"`
-		Pfp         struct {
-			Url      string `json:"url"`
-			Verified bool   `json:"verified"`
-		} `json:"pfp"`
-		Profile struct {
-			Bio struct {
-				Text     string        `json:"text"`
-				Mentions []interface{} `json:"mentions"`
-			} `json:"bio"`
-		} `json:"profile"`
-		FollowerCount  uint `json:"followerCount"`
-		FollowingCount uint `json:"followingCount"`
-	} `json:"author"`
-	Text      string `json:"text"`
-	Timestamp int64  `json:"timestamp"`
-	Replies   struct {
-		Count uint `json:"count"`
-	} `json:"replies"`
-	Reactions struct {
-		Count uint `json:"count"`
-	} `json:"reactions"`
-	Recasts struct {
-		Count     uint          `json:"count"`
-		Recasters []interface{} `json:"recasters"`
-	} `json:"recasts"`
-	Watches struct {
-		Count uint `json:"count"`
-	} `json:"watches"`
-	ViewerContext struct {
-		Reacted bool `json:"reacted"`
-		Recast  bool `json:"recast"`
-		Watched bool `json:"watched"`
-	} `json:"viewerContext"`
+type CastEmbeds struct {
+	Images []struct {
+		Type      string `json:"type"`
+		Url       string `json:"url"`
+		SourceUrl string `json:"sourceUrl"`
+		Alt       string `json:"alt"`
+	} `json:"images"`
+	URLs []struct {
+	} `json:"urls"`
+	Unknowns []struct {
+	} `json:"unknowns"`
+	ProcessedCastText string `json:"processedCastText"`
 }
 
 type Verification struct {
