@@ -51,9 +51,9 @@ func TestClient(t *testing.T) {
 	}
 	fmt.Println(casts)
 
-	/*
-		if err := c.Cast("Casting from https://github.com/alphaticks/go-farcaster"); err != nil {
-			t.Fatal(err)
-		}
-	*/
+	cast, err := c.PostCast("Casting from https://github.com/alphaticks/go-farcaster", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(cast)
 }

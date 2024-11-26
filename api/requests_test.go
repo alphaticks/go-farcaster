@@ -6,8 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alphaticks/go-farcaster/utils"
+	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
+	"gitlab.com/alphaticks/xchanger/chains/evm"
+	"math/big"
 	"net/http"
 	"os"
 	"testing"
@@ -375,7 +378,6 @@ func TestLikeCast(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error performing request: %v", err)
 	}
-
 }
 
 func TestFollow(t *testing.T) {
@@ -403,4 +405,51 @@ func TestFollow(t *testing.T) {
 	if len(res.Errors) > 0 {
 		t.Fatalf("error response: %v", res.Errors)
 	}
+}
+
+func TestSignerRequest(t *testing.T) {
+	omilosPrivateKeyHex := ""
+	omilosPrivateKey, err := crypto.HexToECDSA(omilosPrivateKeyHex)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pk, err := secp256k1.GeneratePrivateKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	pubKey := pk.PubKey()
+	pubKeyHex := fmt.Sprintf("0x%x", pubKey.SerializeUncompressed())
+	//SignedKeyRequest(uint256 requestFid,bytes key,uint256 deadline)
+	signer := evm.NewEIP712Signer("Farcaster", []evm.Type{
+		{Name: "requestFid", Type: "uint256"},
+		{Name: "key", Type: "bytes"},
+		{Name: "deadline", Type: "uint256"},
+	}, "SignedKeyRequest", "1", big.NewInt(0), "")
+
+	deadline := time.Now().Add(5 * time.Minute).Unix()
+	msg := evm.TypedDataMessage{
+		"requestFid": fmt.Sprintf("%d", 6900),
+		"key":        pubKeyHex,
+		"deadline":   fmt.Sprintf("%d", deadline),
+	}
+	msgHash, err := signer.GetMessageHash(msg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	signature, err := crypto.Sign(msgHash, omilosPrivateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	signatureHex := fmt.Sprintf("0x%x", signature)
+
+	req, err := SignerRequest(pubKeyHex, 6900, signatureHex)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var res json.RawMessage
+	err = utils.PerformJSONRequest(client, req, &res)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(string(res))
 }

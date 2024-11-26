@@ -2,6 +2,7 @@ package farcaster
 
 import (
 	"github.com/alphaticks/go-farcaster/api"
+	"github.com/alphaticks/go-farcaster/rpc"
 	"io"
 )
 
@@ -80,5 +81,31 @@ func (i *ReactionsIterator) Next() bool {
 }
 
 func (i *ReactionsIterator) Err() error {
+	return i.err
+}
+
+type RPCIterator struct {
+	cursor string
+	err    error
+	fetch  func(*int, *string) ([]*rpc.Message, string, error)
+	Msgs   []*rpc.Message
+}
+
+func (i *RPCIterator) Next() bool {
+	if i.err != nil {
+		return false
+	}
+	limit := 100
+	i.Msgs, i.cursor, i.err = i.fetch(&limit, &i.cursor)
+	if i.err != nil {
+		return false
+	}
+	if i.cursor == "" {
+		i.err = io.EOF
+	}
+	return true
+}
+
+func (i *RPCIterator) Err() error {
 	return i.err
 }

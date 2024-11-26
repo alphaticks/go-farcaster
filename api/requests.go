@@ -15,29 +15,55 @@ import (
 const (
 	APIURL = "https://api.warpcast.com"
 
-	castV2EP            = "/v2/cast"
-	castsV2EP           = "/v2/casts"
-	recentCastsV2EP     = "/v2/recent-casts"
-	threadCastsV2EP     = "/v2/all-casts-in-thread"
-	castLikesV2EP       = "/v2/cast-likes"
-	castRecastersV2EP   = "/v2/cast-recasters"
-	recastsV2EP         = "/v2/recasts"
-	followsV2EP         = "/v2/follows"
-	followersV2EP       = "/v2/followers"
-	followingV2EP       = "/v2/following"
-	verificationsV2EP   = "/v2/verifications"
-	notificationsV2EP   = "/v2/mention-and-reply-notifications"
-	userV2EP            = "/v2/user"
-	userCastLikesV2EP   = "/v2/user-cast-likes"
-	recentUsersV2EP     = "/v2/recent-users"
-	userCollectionsV2EP = "/v2/user-collections"
-	meV2EP              = "/v2/me"
+	castV2EP              = "/v2/cast"
+	castsV2EP             = "/v2/casts"
+	recentCastsV2EP       = "/v2/recent-casts"
+	threadCastsV2EP       = "/v2/all-casts-in-thread"
+	castLikesV2EP         = "/v2/cast-likes"
+	castRecastersV2EP     = "/v2/cast-recasters"
+	recastsV2EP           = "/v2/recasts"
+	followsV2EP           = "/v2/follows"
+	followersV2EP         = "/v2/followers"
+	followingV2EP         = "/v2/following"
+	verificationsV2EP     = "/v2/verifications"
+	notificationsV2EP     = "/v2/mention-and-reply-notifications"
+	userV2EP              = "/v2/user"
+	userCastLikesV2EP     = "/v2/user-cast-likes"
+	recentUsersV2EP       = "/v2/recent-users"
+	userCollectionsV2EP   = "/v2/user-collections"
+	meV2EP                = "/v2/me"
+	signedKeyRequestsV2EP = "/v2/signed-key-requests"
 )
 
 func EIP191Sign(key *ecdsa.PrivateKey, msg string) ([]byte, error) {
 	rawData := []byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(msg), msg))
 	sighash := crypto.Keccak256(rawData)
 	return crypto.Sign(sighash, key)
+}
+
+func getPublicAPIRequest(method string, path string, params map[string]interface{}, payload interface{}) (*http.Request, error) {
+	var body []byte
+	var err error
+	if payload != nil {
+		body, err = json.Marshal(payload)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	urlParams := url.Values{}
+	for key, value := range params {
+		urlParams.Set(key, fmt.Sprintf("%v", value))
+	}
+
+	path = path + "?" + urlParams.Encode()
+	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	return req, nil
 }
 
 func getAuthAPIRequest(token string, method string, path string, params map[string]interface{}, payload interface{}) (*http.Request, error) {
@@ -70,7 +96,7 @@ func Auth(credentials *ecdsa.PrivateKey, expiresAt *time.Time) (*http.Request, e
 	req := AuthRequest{
 		Method: "generateToken",
 	}
-	req.Params.Timestamp = 1671048630844 //uint64(time.Now().UnixMilli())
+	req.Params.Timestamp = uint64(time.Now().UnixMilli())
 	if expiresAt != nil {
 		req.Params.ExpiresAt = uint64(expiresAt.UnixMilli())
 	}
@@ -80,8 +106,6 @@ func Auth(credentials *ecdsa.PrivateKey, expiresAt *time.Time) (*http.Request, e
 	}
 
 	sign, err := EIP191Sign(credentials, string(body))
-	fmt.Println("sign", string(body), sign)
-	return nil, nil
 	return GetBearerToken(req.Params.Timestamp, &req.Params.ExpiresAt, sign)
 }
 
@@ -381,6 +405,21 @@ func Unfollow(token string, fid uint) (*http.Request, error) {
 
 	payload := FollowRequest{TargetFid: fid}
 	request, err := getAuthAPIRequest(token, http.MethodDelete, path, nil, payload)
+
+	return request, err
+}
+
+func SignerRequest(key string, fid uint, signature string) (*http.Request, error) {
+	//signerRequestsV2EP
+	path := APIURL + signedKeyRequestsV2EP
+
+	payload := SignedKeyRequest{
+		Key:        key,
+		RequestFid: fid,
+		Signature:  signature,
+		Deadline:   time.Now().Add(time.Hour).Unix(),
+	}
+	request, err := getPublicAPIRequest(http.MethodPost, path, nil, payload)
 
 	return request, err
 }

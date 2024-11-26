@@ -417,3 +417,24 @@ type Collection struct {
 	TwitterUsername     string `json:"twitterUsername"`
 	SchemaName          string `json:"schemaName"`
 }
+
+type SignedKeyRequest struct {
+	Key        string `json:"key"`
+	RequestFid uint   `json:"requestFid,string"`
+	Signature  string `json:"signature"`
+	Deadline   int64  `json:"deadline"`
+}
+
+type SignedKeyResponse struct {
+	Result struct {
+		SignedKeyRequest struct {
+			Token       string `json:"token"`
+			DeeplinkUrl string `json:"deeplinkUrl"`
+			Key         string `json:"key"`
+			RequestFid  int    `json:"requestFid"`
+			State       string `json:"state"`
+			IsSponsored bool   `json:"isSponsored"`
+		} `json:"signedKeyRequest"`
+	} `json:"result"`
+	Errors []Error `json:"errors"`
+}

@@ -206,7 +206,7 @@ func (c *Client) GetFollowers(fid int, limit *int, cursor *string) ([]api.User, 
 	return res.Result.Users, res.Next.Cursor, nil
 }
 
-//GetVerifications
+// GetVerifications
 func (c *Client) GetVerifications(fid int) ([]api.Verification, error) {
 	if !c.Authed() {
 		if err := c.Auth(); err != nil {
@@ -289,6 +289,22 @@ func (c *Client) LikeCast(author uint, hash string) (*api.Reaction, error) {
 		return nil, errors.New(res.Errors[0].Message)
 	}
 	return &res.Result.Reaction, nil
+}
+
+func (c *Client) GetSignerRequest(publicKey string, fid uint, signature string) (*api.SignedKeyResponse, error) {
+	req, err := api.SignerRequest(publicKey, fid, signature)
+	if err != nil {
+		return nil, fmt.Errorf("error creating signer request: %w", err)
+	}
+	res := api.SignedKeyResponse{}
+	err = utils.PerformJSONRequest(c.Client, req, &res)
+	if err != nil {
+		return nil, fmt.Errorf("error performing signer key request: %w", err)
+	}
+	if len(res.Errors) > 0 {
+		return nil, errors.New(res.Errors[0].Message)
+	}
+	return &res, nil
 }
 
 func (c *Client) GetCastsIterator(fid int) *CastsIterator {
