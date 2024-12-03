@@ -4,8 +4,9 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/alphaticks/go-farcaster/api"
+	neynar "github.com/alphaticks/go-farcaster/neynar"
 	"github.com/alphaticks/go-farcaster/utils"
+	api "github.com/alphaticks/go-farcaster/warpcast"
 	"net/http"
 	"time"
 )
@@ -17,11 +18,13 @@ type Token struct {
 
 type Client struct {
 	*http.Client
-	pk    *ecdsa.PrivateKey
-	token Token
+	pk          *ecdsa.PrivateKey
+	token       Token
+	me          *api.User
+	neynarToken string
 }
 
-func NewClient(privateKey *ecdsa.PrivateKey, token string) (*Client, error) {
+func NewClient(privateKey *ecdsa.PrivateKey, token, neynarToken string) (*Client, error) {
 	return &Client{
 		Client: http.DefaultClient,
 		pk:     privateKey,
@@ -29,38 +32,48 @@ func NewClient(privateKey *ecdsa.PrivateKey, token string) (*Client, error) {
 			Secret:    token,
 			ExpiresAt: nil,
 		},
+		neynarToken: neynarToken,
 	}, nil
 }
 
 func (c *Client) Auth() error {
-	if c.pk == nil {
-		return errors.New("no private key provided, cannot authenticate")
+	if c.token.Secret == "" {
+		if c.pk == nil {
+			return errors.New("no private key provided, cannot authenticate")
+		}
+		req, err := api.Auth(c.pk, nil)
+		if err != nil {
+			return err
+		}
+		var res api.AuthResponse
+		err = utils.PerformJSONRequest(c.Client, req, &res)
+		if err != nil {
+			return err
+		}
+		if len(res.Errors) > 0 {
+			return errors.New(res.Errors[0].Message)
+		}
+		c.token.Secret = res.Result.Token.Secret
+		fmt.Println("TOKENS ECRET", c.token.Secret)
+		v := time.UnixMilli(int64(res.Result.Token.ExpiresAt))
+		c.token.ExpiresAt = &v
 	}
-	req, err := api.Auth(c.pk, nil)
+	// me
+	me, err := c.GetMe()
 	if err != nil {
 		return err
 	}
-	var res api.AuthResponse
-	err = utils.PerformJSONRequest(c.Client, req, &res)
-	if err != nil {
-		return err
-	}
-	if len(res.Errors) > 0 {
-		return errors.New(res.Errors[0].Message)
-	}
-	c.token.Secret = res.Result.Token.Secret
-	v := time.UnixMilli(int64(res.Result.Token.ExpiresAt))
-	c.token.ExpiresAt = &v
+	c.me = me
 	return nil
+}
+
+func (c *Client) Authed() bool {
+	return c.token.Secret != "" && (c.token.ExpiresAt == nil || time.Now().Before(*c.token.ExpiresAt)) && c.me != nil
 }
 
 func (c *Client) SetBearerToken(secret string, expiresAt time.Time) {
 	c.token.Secret = secret
 	c.token.ExpiresAt = &expiresAt
-}
-
-func (c *Client) Authed() bool {
-	return c.token.Secret != "" && (c.token.ExpiresAt == nil || time.Now().Before(*c.token.ExpiresAt))
 }
 
 func (c *Client) GetBearerToken(timestamp uint64, signature []byte) (*api.Token, error) {
@@ -123,7 +136,7 @@ func (c *Client) GetRecentCasts(limit *int, cursor *string) ([]api.Cast, string,
 }
 
 func (c *Client) GetMe() (*api.User, error) {
-	if !c.Authed() {
+	if c.token.Secret == "" {
 		if err := c.Auth(); err != nil {
 			return nil, fmt.Errorf("error authenticating: %w", err)
 		}
@@ -226,6 +239,25 @@ func (c *Client) GetVerifications(fid int) ([]api.Verification, error) {
 		return nil, errors.New(res.Errors[0].Message)
 	}
 	return res.Result.Verifications, nil
+}
+
+func (c *Client) GetNotifications() ([]neynar.Notification, string, error) {
+	if !c.Authed() {
+		if err := c.Auth(); err != nil {
+			return nil, "", fmt.Errorf("error authenticating: %w", err)
+		}
+	}
+
+	req, err := neynar.GetNotifications(c.neynarToken, int(c.me.Fid), nil, nil)
+	if err != nil {
+		return nil, "", fmt.Errorf("error creating get user request: %w", err)
+	}
+	res := neynar.GetNotificationsResponse{}
+	err = utils.PerformJSONRequest(c.Client, req, &res)
+	if err != nil {
+		return nil, "", fmt.Errorf("error performing request: %w", err)
+	}
+	return res.Notifications, "", nil
 }
 
 func (c *Client) Follow(fid uint) error {

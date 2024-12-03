@@ -1,8 +1,8 @@
 package farcaster
 
 import (
-	"github.com/alphaticks/go-farcaster/api"
 	"github.com/alphaticks/go-farcaster/rpc"
+	"github.com/alphaticks/go-farcaster/warpcast"
 	"io"
 )
 

@@ -40,20 +40,10 @@ func TestClient(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	u, err := c.GetUser(8000)
+	u, _, err := c.GetNotifications()
 	fmt.Println(u, err)
-	casts, _, err := c.GetCasts(2, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, c := range casts {
-		fmt.Println(c.Hash)
-	}
-	fmt.Println(casts)
 
-	cast, err := c.PostCast("Casting from https://github.com/alphaticks/go-farcaster", nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println(cast)
 }

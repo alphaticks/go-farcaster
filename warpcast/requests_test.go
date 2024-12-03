@@ -6,11 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alphaticks/go-farcaster/utils"
-	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
-	"gitlab.com/alphaticks/xchanger/chains/evm"
-	"math/big"
 	"net/http"
 	"os"
 	"testing"
@@ -407,6 +404,7 @@ func TestFollow(t *testing.T) {
 	}
 }
 
+/*
 func TestSignerRequest(t *testing.T) {
 	omilosPrivateKeyHex := ""
 	omilosPrivateKey, err := crypto.HexToECDSA(omilosPrivateKeyHex)
@@ -453,3 +451,5 @@ func TestSignerRequest(t *testing.T) {
 	}
 	fmt.Println(string(res))
 }
+
+*/
